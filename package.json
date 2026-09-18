@@ -1,8 +1,8 @@
 {
-  "name": "@drumee/ui-runtime-extraction",
-  "version": "0.0.0-phase4.5",
+  "name": "@drumee/ui-runtime",
+  "version": "0.1.0-alpha.1",
   "private": true,
-  "description": "Private Phase 4.5 CommonJS LETC runtime exportability extraction workspace; not a public package or final repository boundary.",
+  "description": "Drumee minimal frontend runtime. Pre-release API extracted from the validated Phase 4.5 minimal-kernel boundary.",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
@@ -11,6 +11,7 @@
   },
   "files": [
     "src/",
+    "PROVENANCE.json",
     "PROVENANCE.md",
     "README.md"
   ],

@@ -19,6 +19,7 @@ const {
   LetcTable,
   LetcText
 } = require("./widgets");
+const { excludedSkeletonEvidence } = require("../PROVENANCE.json");
 const { colorFromName } = require("./letc");
 
 function isObject(value) {
@@ -285,7 +286,7 @@ const retainedSkeletonCatalog = Object.freeze({
 });
 
 const excludedSkeletonCatalog = Object.freeze({
-  Messenger: { classification: "DEFER_TEAM", kind: "messenger", evidence: "sources/ui-team/src/drumee/builtins/messenger/index.js uses Team chat API, attachment/MFS and emoji assets" }
+  Messenger: { classification: "DEFER_TEAM", kind: "messenger", evidence: excludedSkeletonEvidence.Messenger }
 });
 
 module.exports = {

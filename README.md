@@ -1,26 +1,43 @@
-# Phase 2 UI runtime extraction
+# @drumee/ui-runtime
 
-This private CommonJS workspace is the smallest browser/runtime seam needed for
-the next independent module slice. It is neither a public package nor a final
-repository boundary.
+Drumee minimal frontend runtime. This is a pre-release CommonJS API extracted
+from the validated Phase 4.5 minimal-kernel boundary. It remains private during
+R0, is not yet published to npm and does not claim stable API compatibility.
 
-The runtime owns the non-MFS LETC bootstrap, static Skeleton/Widget catalog,
-Kind/addon coordination, logical plugin loading, and the genuine historical
-Backbone/Marionette Widget ancestry required before a plugin loads. It retains
-only the data/identity boundary of Host, Visitor and Organization. Generic
-transport and script-loading facilities remain injectable; this workspace does
-not declare `@drumee/ui-essentials` because it currently consumes no Essentials
-export. No Team globals, MFS, Finder, Desktop, Window Manager or media kinds
-are imported.
+The runtime owns the non-MFS LETC bootstrap, elementary Skeleton/Widget
+catalog, Kind/addon coordination, logical plugin loading, browser entry and the
+minimal Host, Visitor and Organization context boundary. Browser builds remain
+the responsibility of `ui-build`; this repository ships no generated bundle.
 
-## Phase 4.5 export boundary
+## Development
 
-The private `npm pack` artifact contains `src/` (including the CommonJS
-browser entry and retained SCSS), this README and provenance. It deliberately
-excludes tests, monorepo sources, Team code, generated bundles and temporary
-artifacts. Webpack build behavior remains owned by the separate transitional
-`ui-build` workspace; this package does not turn build metadata into a runtime
-manifest.
+Node.js 18 or newer is required.
 
-Its name and boundary remain transitional. This is not a public package API or
-a publication commitment.
+```bash
+npm ci
+npm test
+npm pack --dry-run --ignore-scripts
+```
+
+The test suite includes the LETC/Kind/plugin unit contracts, a shipped-file
+dependency audit, `npm pack`, and installation into a clean consumer with
+`NODE_PATH` disabled. The artifact smoke test resolves and loads a plugin kind
+through the installed package.
+
+## Ownership boundary
+
+This repository is browser/runtime code only. It remains CommonJS and
+Webpack-compatible, with no SSR. It does not own Webpack tooling, MFS, Finder,
+Window Manager, Team behavior or application policy.
+
+## Non-goals
+
+R0 does not add React, Vue, ESM, SSR, MFS, Finder, Marketing, Team migration,
+platform bootstrap, a new frontend framework or npm publication.
+
+## Provenance
+
+The repository was history-extracted from
+`drumee/transient:target/foundation/ui-runtime` at transient commit
+`e3f4468d3ea882baeee4c7fefbd956aca4128d28`. See [PROVENANCE.md](PROVENANCE.md)
+for extraction and symbol-level source details.

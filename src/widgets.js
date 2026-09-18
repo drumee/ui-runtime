@@ -7,6 +7,7 @@
  * legacy `KIND` constants.
  */
 const createDOMPurify = require("dompurify");
+const sourceIdentity = Object.freeze(require("../PROVENANCE.json").sourceIdentity);
 const { ATTR, colorFromName, LetcBox, LetcView, _ } = require("./letc");
 
 const NOTE_TAGS = ["a", "b", "br", "code", "div", "em", "i", "p", "span", "strong", "u"];
@@ -564,22 +565,6 @@ class LetcRichText extends LetcText {
     return this.content ? this.content.innerText : "";
   }
 }
-
-const sourceIdentity = Object.freeze({
-  LetcBlank: "sources/ui-core/letc/widgets/blank/index.js",
-  LetcBox: "sources/ui-core/letc/widgets/box/index.js",
-  LetcEntry: "sources/ui-core/letc/widgets/entry/input/index.js",
-  LetcEntryReminder: "sources/ui-core/letc/widgets/entry/reminder/index.js",
-  LetcFileSelector: "sources/ui-core/letc/widgets/file-selector/index.js",
-  LetcImageSmart: "sources/ui-core/letc/widgets/image/smart/index.js",
-  LetcList: "sources/ui-core/letc/widgets/list/{index.js,smart/index.js}",
-  LetcMenuTopic: "sources/ui-core/letc/widgets/menu/index.js",
-  LetcProfile: "sources/ui-core/letc/widgets/profile/{index.js,skeleton/index.js,templates/avatar.js,skin/index.scss}",
-  LetcProgress: "sources/ui-core/letc/widgets/progress/media/{index.js,skeleton/{grid.js,row.js},template/{grid.js,row.js},skin/{grid.scss,row.scss}}",
-  LetcRichText: "sources/ui-core/letc/widgets/text/editable/index.js",
-  LetcSvgImage: "sources/ui-core/letc/widgets/image/svg/index.js",
-  LetcText: "sources/ui-core/letc/widgets/text/index.js"
-});
 
 module.exports = {
   LetcBlank,

@@ -1,4 +1,4 @@
-/* CJS adaptation of sources/ui-essentials/utils/validator.js::validator. */
+/* CJS adaptation; detailed source provenance is recorded in PROVENANCE.md. */
 const identRegExp = /^([a-zA-Z0-9_-])([a-zA-Z0-9.-])*$/;
 const hostRegExp = /^[a-zA-Z0-9_-]+$/;
 const nameRegExp = /^([a-zA-Z0-9.\-'\ xC0-xFF])+$/;
