@@ -20,7 +20,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test test/**/*.test.js"
+    "test": "node --test test/artifact.test.js test/ui-runtime.test.js"
   },
   "dependencies": {
     "backbone": "1.6.1",

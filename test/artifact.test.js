@@ -83,20 +83,24 @@ test("packed UI runtime is standalone, confined and dependency-complete", { time
   assert.deepEqual([...external].sort(), ["backbone", "backbone.marionette", "dompurify", "jquery", "lodash"]);
 
   const smoke = `
-    const assert = require("assert/strict");
-    const path = require("path");
-    const resolved = require.resolve("@drumee/ui-runtime");
-    assert.ok(resolved.startsWith(path.join(process.env.CONSUMER, "node_modules") + path.sep));
-    const runtime = require("@drumee/ui-runtime");
-    let registry;
-    registry = new runtime.KindRegistry({
-      bootstrapPlugin: async () => ({ path: "/-/plugins/packed/index.js" }),
-      loadJS: async () => registry.registerAddons({ packed: class PackedWidget {} })
-    });
-    registry.setReady(Promise.resolve());
-    registry.loadPlugin({ name: "packed", kind: "packed" }).then((Widget) => {
+    (async () => {
+      const assert = require("assert/strict");
+      const path = require("path");
+      const resolved = require.resolve("@drumee/ui-runtime");
+      assert.ok(resolved.startsWith(path.join(process.env.CONSUMER, "node_modules") + path.sep));
+      const runtime = require("@drumee/ui-runtime");
+      let registry;
+      registry = new runtime.KindRegistry({
+        bootstrapPlugin: async () => ({ path: "/-/plugins/packed/index.js" }),
+        loadJS: async () => registry.registerAddons({ packed: class PackedWidget {} })
+      });
+      registry.setReady(Promise.resolve());
+      const Widget = await registry.loadPlugin({ name: "packed", kind: "packed" });
       assert.equal(typeof Widget, "function");
-    }).catch((error) => { process.nextTick(() => { throw error; }); });
+    })().catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
   `;
   mustRun("node", ["-e", smoke], { cwd: consumer, env: { NODE_PATH: "", CONSUMER: consumer } });
   t.diagnostic(`artifact=${archives[0]}`);
