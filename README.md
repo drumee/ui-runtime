@@ -1,8 +1,9 @@
 # @drumee/ui-runtime
 
 Drumee minimal frontend runtime. This is a pre-release CommonJS API extracted
-from the validated Phase 4.5 minimal-kernel boundary. It remains private during
-R0, is not yet published to npm and does not claim stable API compatibility.
+from the validated Phase 4.5 minimal-kernel boundary. It is prepared for a
+public prerelease under the `next` dist-tag, is not yet published to npm and
+does not claim stable API compatibility.
 
 The runtime owns the non-MFS LETC bootstrap, elementary Skeleton/Widget
 catalog, Kind/addon coordination, logical plugin loading, browser entry and the
@@ -32,8 +33,8 @@ Window Manager, Team behavior or application policy.
 
 ## Non-goals
 
-R0 does not add React, Vue, ESM, SSR, MFS, Finder, Marketing, Team migration,
-platform bootstrap, a new frontend framework or npm publication.
+This prerelease does not add React, Vue, ESM, SSR, MFS, Finder, Marketing,
+Team migration, platform bootstrap or a new frontend framework.
 
 ## Provenance
 
