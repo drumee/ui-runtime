@@ -523,6 +523,11 @@ test("behaviorSet and descriptor behavior resolution retain radio precedence", (
   };
   const names = resolveBehaviors(view).map((entry) => entry.behaviorClass.name).sort();
   assert.deepEqual(names, ["RadioBehavior", "RadioToggleBehavior"]);
+  const radio_toggle = {
+    model: new Backbone.Model({ radiotoggle: "manager-choices", state: 0 }),
+    options: {}
+  };
+  assert.deepEqual(resolveBehaviors(radio_toggle).map((entry) => entry.behaviorClass.name), ["RadioToggleBehavior"]);
 });
 
 test("canonical fig state is additive and stamps data-kind", () => {

@@ -148,7 +148,7 @@ function resolveBehaviors(view) {
       behaviorClass: Behavior
     };
   }
-  if (definitions.RadioBehavior) delete definitions.ToggleBehavior;
+  if (definitions.RadioBehavior || definitions.RadioToggleBehavior) delete definitions.ToggleBehavior;
   return Object.values(definitions);
 }
 
