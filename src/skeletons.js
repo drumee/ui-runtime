@@ -57,8 +57,9 @@ class SkeletonBuilder extends CoreSkeleton {
   // Retains builder.js's descriptor merge and minimal `kidsOpt` behaviour.
   render(options = {}) {
     const result = { ...super.render(), ...options };
-    if (isObject(result.kidsOpt) && Array.isArray(result.kids)) {
-      result.kids = result.kids.map((kid) => ({ ...kid, ...result.kidsOpt }));
+    const kids_options = result.kidsOpt || result.itemsOpt;
+    if (isObject(kids_options) && Array.isArray(result.kids)) {
+      result.kids = result.kids.map((kid) => ({ ...kid, ...kids_options }));
     }
     return result;
   }

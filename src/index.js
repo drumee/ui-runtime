@@ -7,6 +7,7 @@ const { PointerDragState, UiRuntime, bootstrap, createRuntime, getRuntime } = re
 const { Skeletons, staticKinds, retainedSkeletonCatalog, excludedSkeletonCatalog } = require("./skeletons");
 const { LetcBlank, LetcBox, LetcEntry, LetcEntryReminder, LetcFileSelector, LetcImageSmart, LetcList, LetcMenuTopic, LetcProfile, LetcProgress, LetcRichText, LetcSvgImage, LetcTable, LetcText, sourceIdentity } = require("./widgets");
 const { Backbone, Marionette } = require("./letc");
+const { RadioBehavior, RadioToggleBehavior, ToggleBehavior, normalizeState, radioState, resolveBehaviors } = require("./behaviors");
 const { Websocket } = require("./websocket");
 
 module.exports = {
@@ -37,6 +38,9 @@ module.exports = {
   UiRuntime,
   Marionette,
   PointerDragState,
+  RadioBehavior,
+  RadioToggleBehavior,
+  ToggleBehavior,
   bootstrap,
   createRuntime,
   getRuntime,
@@ -44,5 +48,8 @@ module.exports = {
   excludedSkeletonCatalog,
   sourceIdentity,
   staticKinds,
-  loadBrowserScript
+  loadBrowserScript,
+  normalizeState,
+  radioState,
+  resolveBehaviors
 };

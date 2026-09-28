@@ -10,6 +10,11 @@ catalog, Kind/addon coordination, logical plugin loading, browser entry and the
 minimal Host, Visitor and Organization context boundary. Browser builds remain
 the responsibility of `ui-build`; this repository ships no generated bundle.
 
+The exported LETC contract includes canonical Skeleton descriptor
+normalization, Widget/Kind rendering, part and UI-handler routing, fig identity,
+and the radio/toggle/radio-toggle state behaviors used by standalone UI
+capabilities.
+
 ## Development
 
 Node.js 18 or newer is required.

@@ -62,7 +62,7 @@ class LetcText extends LetcView {
   }
 
   draw() {
-    this.el.dataset.state = this.mget("state") || "";
+    if (this.model.has("state")) this.setState(this.mget("state"));
     this.$content = this.$el.find(`#${this._id}-inner`);
     this.renderPseudo();
   }
@@ -119,7 +119,7 @@ class LetcSvgImage extends LetcView {
   onDomRefresh() {
     const chartId = this.mget("chartId") || this.mget("ico") || "";
     const content = this.mget(ATTR.content);
-    this.el.dataset.state = this.mget("state") || "";
+    if (this.model.has("state")) this.setState(this.mget("state"));
     if (content) this.el.innerHTML = String(content);
     else this.el.innerHTML = `<svg id="icon-${this._id}" class="${this.mget("innerClass")}" role="img" aria-label="${chartId}"><use href="#--icon-${chartId}"></use></svg>`;
   }

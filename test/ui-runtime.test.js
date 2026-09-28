@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const test = require("node:test");
 const {
+  Backbone,
   Context,
   Host,
   KindRegistry,
@@ -26,6 +27,8 @@ const {
 } = require("../src");
 const { sessionAuthorizationHeaders } = require("../src/service");
 const { runtimeAssetUrl } = require("../src/bootstrap");
+const { applyViewState, normalizeKids } = require("../src/letc");
+const { normalizeState, radioState, resolveBehaviors, setState } = require("../src/behaviors");
 
 function createBootstrapTarget() {
   const document = new EventTarget();
@@ -461,6 +464,96 @@ test("every exposed non-MFS Skeleton builder emits a pre-registered extracted Wi
   for (const [name, record] of Object.entries(excludedSkeletonCatalog)) {
     assert.notEqual(record.classification, "INVESTIGATE", `${name} must have a final classification`);
   }
+});
+
+test("canonical Skeleton factories preserve descriptor normalization and child options", () => {
+  const handler = { model: {} };
+  const descriptor = Skeletons.Box.X({
+    cn: "shell",
+    ui: handler,
+    part: handler,
+    sys_pn: "shell-part",
+    kidsOpt: { bubble: 0 },
+    kids: [Skeletons.Note({ content: "Title", service: "select" })]
+  });
+  assert.equal(descriptor.kind, "box");
+  assert.equal(descriptor.flow, "x");
+  assert.equal(descriptor.className, "shell");
+  assert.equal(descriptor.uiHandler, handler);
+  assert.equal(descriptor.partHandler, handler);
+  assert.equal(descriptor.sys_pn, "shell-part");
+  assert.equal(descriptor.kids[0].kind, "note");
+  assert.equal(descriptor.kids[0].service, "select");
+  assert.equal(descriptor.kids[0].bubble, 0);
+  assert.equal(Skeletons.Box.Y().flow, "y");
+  assert.equal(Skeletons.Box.Z().flow, "none");
+  assert.equal(Skeletons.Button.Icon({ ico: "minimize" }).kind, "image_svg");
+  assert.equal(Skeletons.Button.Label({ ico: "maximize" }).kind, "image_svg");
+  assert.equal(Skeletons.Button.Svg({ ico: "close" }).kind, "image_svg");
+  assert.equal(Skeletons.Wrapper.X().flow, "x");
+  assert.equal(Skeletons.Wrapper.Y().flow, "y");
+  assert.deepEqual(normalizeKids([null, {}, Skeletons.Note("kept")]).map((kid) => kid.kind), ["note"]);
+});
+
+test("canonical state helpers synchronize model and LETC DOM attributes", () => {
+  const attributes = new Map([["data-radiotoggle", "off"]]);
+  const model = new Backbone.Model({ state: "on", radiotoggle: "group" });
+  const view = {
+    model,
+    el: {
+      setAttribute(name, value) { attributes.set(name, value); },
+      getAttribute(name) { return attributes.get(name) ?? null; }
+    }
+  };
+  assert.equal(normalizeState("yes"), 1);
+  assert.equal(normalizeState("off"), 0);
+  assert.equal(radioState(1), "on");
+  assert.equal(setState(view, null), 1);
+  assert.equal(model.get("state"), 1);
+  assert.equal(attributes.get("data-state"), "1");
+  assert.equal(attributes.get("data-radio"), "on");
+  assert.equal(attributes.get("data-radiotoggle"), "on");
+});
+
+test("behaviorSet and descriptor behavior resolution retain radio precedence", () => {
+  const view = {
+    model: new Backbone.Model({ radio: "manager-1", toggle: true }),
+    options: {},
+    behaviorSet() { return { bhv_toggle: 1, bhv_radiotoggle: { channel: "choice" } }; }
+  };
+  const names = resolveBehaviors(view).map((entry) => entry.behaviorClass.name).sort();
+  assert.deepEqual(names, ["RadioBehavior", "RadioToggleBehavior"]);
+});
+
+test("canonical fig state is additive and stamps data-kind", () => {
+  const attributes = new Map();
+  const values = {
+    className: "package-shell",
+    flow: "y",
+    kind: "managed_window",
+    dataset: { window_id: "window-a" },
+    attributes: { role: "dialog" },
+    styleOpt: { left: "10px" }
+  };
+  const view = {
+    nativeClassName: "native",
+    fig: { group: "drumee", family: "drumee-managed-window", name: "managed-window" },
+    el: {
+      className: "",
+      dataset: {},
+      setAttribute(name, value) { attributes.set(name, value); }
+    },
+    $el: { css(style) { view.style = style; } },
+    model: { has(name) { return Object.hasOwn(values, name); } },
+    mget(name) { return values[name]; },
+    setState() {}
+  };
+  applyViewState(view);
+  assert.equal(view.el.className, "native package-shell drumee drumee-managed-window drumee__item drumee__ui drumee-managed-window__ui");
+  assert.equal(view.el.dataset.kind, "managed_window");
+  assert.equal(view.el.dataset.window_id, "window-a");
+  assert.equal(attributes.get("role"), "dialog");
+  assert.deepEqual(view.style, { left: "10px" });
 });
 
 test("canonical Widget classes retain real historical Marionette ancestry", () => {

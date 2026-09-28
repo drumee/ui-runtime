@@ -9,6 +9,7 @@ const Backbone = require("backbone");
 const Marionette = require("backbone.marionette");
 const jquery = require("jquery");
 const _ = require("lodash");
+const { normalizeState, resolveBehaviors, setState } = require("./behaviors");
 
 Backbone.$ = jquery;
 
@@ -58,15 +59,61 @@ function initializeView(view, options = {}) {
 }
 
 function applyViewState(view) {
-  const className = view.mget(ATTR.className) || view.nativeClassName;
-  if (className) view.el.className = className;
+  const class_names = [view.nativeClassName, view.mget(ATTR.className)];
+  if (view.fig) {
+    class_names.push(view.fig.group, view.fig.family, `${view.fig.group}__item`, `${view.fig.group}__ui`, `${view.fig.family}__ui`);
+    view.el.dataset.kind = view.mget(ATTR.kind) || "";
+  }
+  view.el.className = class_names.filter(Boolean).join(" ");
   const flow = view.mget(ATTR.flow);
   if (flow != null) view.el.dataset.flow = flow;
   const sysPn = view.mget(ATTR.sysPn);
   if (sysPn) view.el.dataset.sysPn = sysPn;
+  const dataset = view.mget("dataset") || {};
+  for (const [name, value] of Object.entries(dataset)) view.el.dataset[name] = String(value);
+  const attributes = view.mget("attributes") || view.mget("attribute") || view.mget("attrOpt") || {};
+  for (const [name, value] of Object.entries(attributes)) view.el.setAttribute(name, String(value));
   const style = view.mget(ATTR.styleOpt) || view.mget(ATTR.style) || {};
   if (style && typeof style === "object") view.$el.css(style);
+  if (view.model.has("state")) view.setState(view.mget("state"));
 }
+
+function getHandlers(view, name) {
+  let handlers = view.mget(name === "ui" ? "uiHandler" : "partHandler");
+  if (!Array.isArray(handlers)) handlers = handlers && handlers.model ? [handlers] : [];
+  else handlers = [...handlers];
+  let parent = view.parent;
+  while (parent) {
+    const policy = parent._handledEvents && parent._handledEvents[name];
+    if (policy === "single" || policy === "multiple") handlers.push(parent);
+    if (policy === "single") break;
+    parent = parent.parent;
+  }
+  return [...new Map(handlers.filter(Boolean).map((handler) => [handler.cid, handler])).values()];
+}
+
+function handleUiClick(view, event) {
+  if (view.mget(ATTR.active) === 0) return;
+  view.triggerMethod("also:click", view, event);
+  const handlers = view.getHandlers("ui");
+  const signal = view.mget("signal") || "ui:event";
+  for (const handler of handlers) handler.triggerMethod(signal, view, event);
+  if (handlers.length || view.mget("service")) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+
+const view_contract = {
+  behaviors() { return resolveBehaviors(this); },
+  events() { return { click: "_handleUiClick" }; },
+  _handleUiClick(event) { return handleUiClick(this, event); },
+  contains(other) { return Boolean(other && other.el && this.el.contains(other.el)); },
+  getHandlers(name) { return getHandlers(this, name); },
+  setState(state, recursive) { return setState(this, state, recursive); },
+  getState() { return normalizeState(this.model.get("state")); },
+  toggleState() { return this.setState(this.getState() ? 0 : 1); }
+};
 
 // Exact non-ESM adaptation of ui-essentials/utils/index.js::colorFromName.
 // LETC's static Avatar/Profile presentation needs this generic helper, while
@@ -88,8 +135,21 @@ class LetcView extends Marionette.View {
   }
 
   get template() {
-    return false;
+    return () => "";
   }
+
+  tagName() {
+    return this.model && (this.model.get("tagName") || this.model.get("href")) ? (this.model.get("tagName") || "a") : "div";
+  }
+
+  behaviors() { return view_contract.behaviors.call(this); }
+  events() { return view_contract.events.call(this); }
+  _handleUiClick(event) { return view_contract._handleUiClick.call(this, event); }
+  contains(other) { return view_contract.contains.call(this, other); }
+  getHandlers(name) { return view_contract.getHandlers.call(this, name); }
+  setState(state, recursive) { return view_contract.setState.call(this, state, recursive); }
+  getState() { return view_contract.getState.call(this); }
+  toggleState() { return view_contract.toggleState.call(this); }
 
   mget(name) {
     return this.model.get(name);
@@ -139,11 +199,17 @@ class LetcView extends Marionette.View {
     this[`__${_.camelCase(name)}`] = child;
     if (typeof this.onPartReady === "function") this.onPartReady(child, name);
     this.triggerMethod("part:ready", child, name);
+    child.once("destroy", () => {
+      if (this._branches[name] === child) delete this._branches[name];
+      if (this[`__${_.camelCase(name)}`] === child) delete this[`__${_.camelCase(name)}`];
+    });
     return child;
   }
 }
 
 class LetcBox extends Marionette.CollectionView {
+  static figName = "drumee_box";
+
   constructor(options = {}) {
     const normalized = normalizeOptions(options);
     const kids = normalized.collection || new Backbone.Collection(normalizeKids(normalized.kids));
@@ -159,6 +225,19 @@ class LetcBox extends Marionette.CollectionView {
   get template() {
     return false;
   }
+
+  tagName() {
+    return this.model && (this.model.get("tagName") || this.model.get("href")) ? (this.model.get("tagName") || "a") : "div";
+  }
+
+  behaviors() { return view_contract.behaviors.call(this); }
+  events() { return view_contract.events.call(this); }
+  _handleUiClick(event) { return view_contract._handleUiClick.call(this, event); }
+  contains(other) { return view_contract.contains.call(this, other); }
+  getHandlers(name) { return view_contract.getHandlers.call(this, name); }
+  setState(state, recursive) { return view_contract.setState.call(this, state, recursive); }
+  getState() { return view_contract.getState.call(this); }
+  toggleState() { return view_contract.toggleState.call(this); }
 
   mget(name) {
     return this.model.get(name);
@@ -194,7 +273,9 @@ class LetcBox extends Marionette.CollectionView {
   }
 
   childViewOptions(model) {
-    return { ...model.toJSON(), model, runtime: this.runtime };
+    const descriptor = mergeKidOptions(model.toJSON(), this.mget("kidsOpt") || this.mget("itemsOpt"), this);
+    model.set(descriptor);
+    return { ...descriptor, model, runtime: this.runtime };
   }
 
   buildChildView(model, ChildViewClass, options) {
@@ -215,9 +296,9 @@ class LetcBox extends Marionette.CollectionView {
     child.parent = parent;
     const part = child.mget(ATTR.sysPn);
     if (!part) return;
-    let owner = child.mget("partHandler") || parent;
-    while (owner && typeof owner.onPartReady !== "function") owner = owner.parent;
-    (owner || parent).registerPart(child, part);
+    const handlers = child.getHandlers("part");
+    if (!handlers.length) handlers.push(parent);
+    for (const owner of handlers) owner.registerPart(child, part);
   }
 
   onDomRefresh() {}
@@ -258,14 +339,24 @@ class LetcBox extends Marionette.CollectionView {
     this[`__${_.camelCase(name)}`] = child;
     if (typeof this.onPartReady === "function") this.onPartReady(child, name);
     this.triggerMethod("part:ready", child, name);
+    child.once("destroy", () => {
+      if (this._branches[name] === child) delete this._branches[name];
+      if (this[`__${_.camelCase(name)}`] === child) delete this[`__${_.camelCase(name)}`];
+    });
     return child;
   }
 }
 
-function normalizeKids(value) {
+function mergeKidOptions(descriptor, kidsOpt, owner) {
+  if (!kidsOpt) return descriptor;
+  const options = typeof kidsOpt === "function" ? kidsOpt(owner, descriptor) : kidsOpt;
+  return { ...descriptor, ...(options || {}) };
+}
+
+function normalizeKids(value, kidsOpt, owner) {
   if (!value) return [];
   const list = Array.isArray(value) ? value : [value];
-  return list.filter((entry) => entry && entry.kind);
+  return list.filter((entry) => entry && entry.kind).map((entry) => mergeKidOptions(entry, kidsOpt, owner));
 }
 
 module.exports = {
@@ -276,5 +367,6 @@ module.exports = {
   LetcView,
   Marionette,
   _,
+  applyViewState,
   normalizeKids
 };
