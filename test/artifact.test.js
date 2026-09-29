@@ -63,7 +63,7 @@ test("packed UI runtime is standalone, confined and dependency-complete", { time
   assert.ok(installedRoot.startsWith(path.join(consumer, "node_modules") + path.sep));
   const manifest = JSON.parse(fs.readFileSync(installedPackageJson, "utf8"));
   assert.equal(manifest.name, "@drumee/ui-runtime");
-  assert.equal(manifest.version, "0.1.0-alpha.1");
+  assert.equal(manifest.version, "0.1.0-alpha.2");
 
   const declared = new Set(Object.keys(manifest.dependencies || {}));
   const external = new Set();

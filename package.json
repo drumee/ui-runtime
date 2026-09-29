@@ -1,6 +1,6 @@
 {
   "name": "@drumee/ui-runtime",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "private": false,
   "description": "Drumee minimal frontend runtime. Pre-release API extracted from the validated Phase 4.5 minimal-kernel boundary.",
   "license": "AGPL-3.0-only",
