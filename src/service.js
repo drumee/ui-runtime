@@ -80,7 +80,7 @@ class ServiceClient {
   constructor({ baseUrl = "/-/svc/", fetch: fetchImpl = globalThis.fetch, credentials, sessionAuthorization } = {}) {
     this.baseUrl = baseUrl;
     transportStates.set(this, {
-      fetch: fetchImpl,
+      fetch: typeof fetchImpl === "function" && fetchImpl === globalThis.fetch ? fetchImpl.bind(globalThis) : fetchImpl,
       credentials,
       authorization: normalizedSessionAuthorization(sessionAuthorization)
     });

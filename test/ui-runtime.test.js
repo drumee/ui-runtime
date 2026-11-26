@@ -632,3 +632,16 @@ test("binary transport reports native errors and rejects structured bodies befor
   await assert.rejects(client.uploadBinary("transfer.chunk", {}, { body: "json" }), TypeError);
   assert.equal(calls, 1);
 });
+
+test("the default browser fetch retains its Window receiver for structured and binary requests", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = function () {
+    assert.equal(this, globalThis, "Web IDL fetch requires its global receiver");
+    return Promise.resolve({ ok: true, json: async () => ({ status: "ok", data: true }) });
+  };
+  try {
+    const client = new ServiceClient();
+    assert.equal(await client.postService("transport.probe", {}), true);
+    assert.equal(await client.uploadBinary("transport.probe", {}, new Uint8Array([1])), true);
+  } finally { globalThis.fetch = original; }
+});
