@@ -605,3 +605,30 @@ test("ui-runtime production code has no legacy kind namespace, Team or MFS impor
   assert.doesNotMatch(source, /(?:window\.|global\.)KIND|KIND\s*\./);
   assert.doesNotMatch(source, /require\([^)]*(?:ui-team|server-team|DrumeeMFS|Finder|WindowManager)/);
 });
+
+test("binary requests retain the private session and rotate it through the existing transport", async () => {
+  const calls = [];
+  const client = new ServiceClient({ baseUrl: "/-/svc/", credentials: "include", sessionAuthorization: { sid: "initial-session-0001" }, fetch: async (url, options) => {
+    calls.push({ url, options });
+    return { ok: true, status: 200, headers: { get: name => name === "regsid" ? "rotated-session-0002" : null }, json: async () => ({ status: "ok", data: { accepted: true } }) };
+  } });
+  const body = new Blob(["binary"]);
+  assert.deepEqual(await client.uploadBinary("transfer.chunk", { transfer_id: "opaque", index: 0 }, body), { accepted: true });
+  assert.equal(calls[0].url, "/-/svc/transfer.chunk?transfer_id=opaque&index=0");
+  assert.equal(calls[0].options.body, body);
+  assert.equal(calls[0].options.method, "POST");
+  assert.equal(calls[0].options.credentials, "include");
+  assert.equal(calls[0].options.headers["content-type"], "application/octet-stream");
+  assert.equal(calls[0].options.headers["x-param-regsid"], "initial-session-0001");
+  await client.postService("transfer.status", {});
+  assert.equal(calls[1].options.headers["x-param-regsid"], "rotated-session-0002");
+  assert.equal(JSON.stringify(client).includes("session-000"), false);
+});
+
+test("binary transport reports native errors and rejects structured bodies before fetch", async () => {
+  let calls = 0;
+  const client = new ServiceClient({ fetch: async () => { calls++; return { ok: false, status: 403, json: async () => ({ status: "error", code: "PERMISSION_DENIED" }) }; } });
+  await assert.rejects(client.uploadBinary("transfer.chunk", {}, new Uint8Array([1, 2])), error => error.code === "PERMISSION_DENIED" && error.status === 403);
+  await assert.rejects(client.uploadBinary("transfer.chunk", {}, { body: "json" }), TypeError);
+  assert.equal(calls, 1);
+});

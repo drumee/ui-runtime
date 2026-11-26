@@ -95,7 +95,7 @@ class ServiceClient {
     });
   }
 
-  async request(method, service, payload) {
+  async request(method, service, payload, binaryBody) {
     const call = normalizePayload(service, payload);
     const state = transportStates.get(this);
     if (!state || typeof state.fetch !== "function") throw new Error("Browser fetch is not configured");
@@ -108,13 +108,18 @@ class ServiceClient {
       }
     };
     if (state.credentials) options.credentials = state.credentials;
-    if (method === "GET") {
+    if (method === "GET" || binaryBody !== undefined) {
       const query = new URLSearchParams();
       for (const [key, value] of Object.entries(call.payload)) {
         if (value != null) query.set(key, typeof value === "string" ? value : JSON.stringify(value));
       }
       const suffix = query.toString();
       if (suffix) url = `${url}?${suffix}`;
+      if (binaryBody !== undefined) {
+        options.headers["content-type"] = "application/octet-stream";
+        options.body = binaryBody;
+        options.cache = "no-cache";
+      }
     } else {
       options.headers["content-type"] = "application/json";
       options.body = JSON.stringify(call.payload);
@@ -143,6 +148,13 @@ class ServiceClient {
 
   postService(service, payload) {
     return this.request("POST", service, payload);
+  }
+
+  uploadBinary(service, payload, body) {
+    if (!(typeof Blob !== "undefined" && body instanceof Blob) && !(body instanceof ArrayBuffer) && !ArrayBuffer.isView(body)) {
+      return Promise.reject(new TypeError("Binary service body must be a Blob, ArrayBuffer or typed array"));
+    }
+    return this.request("POST", service, payload, body);
   }
 }
 
